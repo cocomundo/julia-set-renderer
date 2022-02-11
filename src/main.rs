@@ -31,24 +31,31 @@ fn main() {
 
     for x in 0..opt.width {
         for y in 0..opt.height {
-            let mut zx = 1.5 * (x as f32 - w / 2.0) / (0.5 * zoom * w) + move_x;
-            let mut zy = 1.0 * (y as f32 - h / 2.0) / (0.5 * zoom * h) + move_y;
-            let mut i = max_iter;
-            while zx * zx + zy * zy < 4.0f32 && i > 1 {
-                let tmp = zx * zx - zy * zy + CX;
-                (zy, zx) = (2.0 * zx * zy + CY, tmp);
-                i -= 1;
-            }
+            let zx = 1.5 * (x as f32 - w / 2.0) / (0.5 * zoom * w) + move_x;
+            let zy = 1.0 * (y as f32 - h / 2.0) / (0.5 * zoom * h) + move_y;
+
+            let i = convergence_steps(max_iter, zx, zy);
+
             // convert byte to RGB (3 bytes), kinda magic to get nice colors
-            let r = (i << 5) as u8;
-            let g = (i << 7) as u8;
-            let b = (i << 9) as u8;
+            let r = (i << 3) as u8;
+            let g = (i << 5) as u8;
+            let b = (i << 4) as u8;
             let pixel = Rgb::from_channels(r, g, b, 0);
             img.put_pixel(x as u32, y as u32, pixel);
         }
     }
 
     img.save(opt.output).unwrap();
+}
+
+fn convergence_steps(max_iter: i32, mut zx: f32, mut zy: f32) -> i32 {
+    let mut i = max_iter;
+    while zx * zx + zy * zy < 4.0f32 && i > 1 {
+        let tmp = zx * zx - zy * zy + CX;
+        (zy, zx) = (2.0 * zx * zy + CY, tmp);
+        i -= 1;
+    }
+    i
 }
 
 fn delphi_gradient(i: u32) -> Rgb<u8> {
