@@ -2,6 +2,9 @@ use image::{ImageBuffer, Pixel, Rgb};
 use std::path::PathBuf;
 use structopt::StructOpt;
 
+const CX: f32 = -0.7;
+const CY: f32 = 0.27015;
+
 #[derive(Debug, StructOpt, Clone, Default, PartialEq, Eq)]
 pub struct Opt {
     #[structopt(short, long, default_value = "800")]
@@ -19,11 +22,32 @@ fn main() {
 
     let mut img = ImageBuffer::new(opt.width, opt.height);
 
-    for i in 0..opt.width {
-        for j in 0..opt.height {
-            img.put_pixel(i as u32, j as u32, delphi_gradient(i / 10));
+    let (move_x, move_y) = (0.0, 0.0);
+    let max_iter = 255;
+    let zoom = 1.0f32;
+
+    let w = opt.width as f32;
+    let h = opt.height as f32;
+
+    for x in 0..opt.width {
+        for y in 0..opt.height {
+            let mut zx = 1.5 * (x as f32 - w / 2.0) / (0.5 * zoom * w) + move_x;
+            let mut zy = 1.0 * (y as f32 - h / 2.0) / (0.5 * zoom * h) + move_y;
+            let mut i = max_iter;
+            while zx * zx + zy * zy < 4.0f32 && i > 1 {
+                let tmp = zx * zx - zy * zy + CX;
+                (zy, zx) = (2.0 * zx * zy + CY, tmp);
+                i -= 1;
+            }
+            // convert byte to RGB (3 bytes), kinda magic to get nice colors
+            let r = (i << 5) as u8;
+            let g = (i << 7) as u8;
+            let b = (i << 9) as u8;
+            let pixel = Rgb::from_channels(r, g, b, 0);
+            img.put_pixel(x as u32, y as u32, pixel);
         }
     }
+
     img.save(opt.output).unwrap();
 }
 
