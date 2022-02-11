@@ -38,12 +38,7 @@ fn main() {
 
                     convergence_steps(max_iter, zx, zy)
                 })
-                .map(|i| {
-                    let r = (i << 3) as u8;
-                    let g = (i << 5) as u8;
-                    let b = (i << 4) as u8;
-                    Rgb::from_channels(r, g, b, 0)
-                })
+                .map(delphi_gradient)
                 .collect::<Vec<Rgb<u8>>>()
         })
         .collect::<Vec<_>>();
