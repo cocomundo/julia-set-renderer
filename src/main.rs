@@ -1,4 +1,5 @@
 use image::{ImageBuffer, Pixel, Rgb};
+use rayon::prelude::*;
 use std::path::PathBuf;
 use structopt::StructOpt;
 
@@ -30,6 +31,7 @@ fn main() {
     let h = opt.height as f32;
 
     let outer = (0..opt.width)
+        .into_par_iter()
         .map(|x| {
             (0..opt.height)
                 .map(|y| {
