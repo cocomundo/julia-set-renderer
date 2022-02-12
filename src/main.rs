@@ -6,8 +6,8 @@ use klask::Settings;
 use rayon::prelude::*;
 use std::{borrow::Cow, path::PathBuf};
 
-const CX: f32 = -0.7;
-const CY: f32 = 0.27015;
+const CX: f64 = -0.7;
+const CY: f64 = 0.27015;
 
 const MAX_ITER: i32 = 256;
 
@@ -24,13 +24,13 @@ pub struct Args {
     output: PathBuf,
 
     #[clap(short, long, default_value = "1.0")]
-    zoom: f32,
+    zoom: f64,
 
     #[clap(short, long, allow_hyphen_values = true, default_value = "0.0")]
-    x_offset: f32,
+    x_offset: f64,
 
     #[clap(short, long, allow_hyphen_values = true, default_value = "0.0")]
-    y_offset: f32,
+    y_offset: f64,
 
     #[clap(short, long, takes_value = false)]
     gui: bool,
@@ -61,8 +61,8 @@ fn process(args: Args) {
 
     let (x_offset, y_offset) = (args.x_offset, args.y_offset);
 
-    let w = args.width as f32;
-    let h = args.height as f32;
+    let w = args.width as f64;
+    let h = args.height as f64;
 
     let mut img = RgbImage::new(args.width, args.height);
 
@@ -71,21 +71,19 @@ fn process(args: Args) {
         .par_iter_mut()
         .for_each(|(x, y, pixel)| {
             let steps = convergence_steps(
-                1.5 * (*x as f32 - w / 2.0) / (0.5 * args.zoom * w) + x_offset,
-                1.0 * (*y as f32 - h / 2.0) / (0.5 * args.zoom * h) + y_offset,
+                1.5 * (*x as f64 - w / 2.0) / (0.5 * args.zoom * w) + x_offset,
+                1.0 * (*y as f64 - h / 2.0) / (0.5 * args.zoom * h) + y_offset,
             );
 
-            //**pixel = colorgrade_1(steps);
             **pixel = colorgrad(steps, colorgrad::turbo());
-            //dbg!(pixel);
         });
 
     img.save(args.output).unwrap();
 }
 
-fn convergence_steps(mut zx: f32, mut zy: f32) -> i32 {
+fn convergence_steps(mut zx: f64, mut zy: f64) -> i32 {
     let mut i = MAX_ITER;
-    while zx * zx + zy * zy < 4.0f32 && i > 1 {
+    while zx * zx + zy * zy < 4.0f64 && i > 1 {
         let tmp = zx * zx - zy * zy + CX;
         (zy, zx) = (2.0 * zx * zy + CY, tmp);
         i -= 1;
@@ -108,7 +106,7 @@ fn smooth_gradient(i: i32) -> Rgb<u8> {
 }
 
 fn sidef_gradient(i: i32) -> Rgb<u8> {
-    let hsv = color::Hsv::<f32>::new(Deg(i as f32 / MAX_ITER as f32 * 360.0), 1.0, i as f32);
+    let hsv = color::Hsv::<f64>::new(Deg(i as f64 / MAX_ITER as f64 * 360.0), 1.0, i as f64);
     let rgb = hsv.to_rgb::<u8>();
     Rgb([rgb.r, rgb.g, rgb.b])
 }
