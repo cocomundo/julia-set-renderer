@@ -42,7 +42,7 @@ fn main() {
 
     let args = Args::parse();
     if args.gui {
-        klask::run_derived::<Args, _>(settings, |o| process(o));
+        klask::run_derived::<Args, _>(settings, process);
     } else {
         process(args);
     }
