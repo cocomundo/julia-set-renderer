@@ -4,7 +4,7 @@ use colorgrad::Gradient;
 use image::{Rgb, RgbImage};
 use klask::Settings;
 use rayon::prelude::*;
-use std::{borrow::Cow, path::PathBuf};
+use std::{borrow::Cow, path::PathBuf, time::Instant};
 
 const CX: f64 = -0.7;
 const CY: f64 = 0.27015;
@@ -59,6 +59,9 @@ fn process(args: Args) {
         }
     */
 
+    println!("Starting");
+    let start = Instant::now();
+
     let (x_offset, y_offset) = (args.x_offset, args.y_offset);
 
     let w = args.width as f64;
@@ -78,7 +81,13 @@ fn process(args: Args) {
             **pixel = colorgrad(steps, colorgrad::turbo());
         });
 
+    println!("Finished processing, took {}s", start.elapsed().as_secs());
+    let start = Instant::now();
+    println!("Saving to {}", args.output.display());
+
     img.save(args.output).unwrap();
+
+    println!("Done, saving took {}s", start.elapsed().as_secs());
 }
 
 fn convergence_steps(mut zx: f64, mut zy: f64) -> i32 {
