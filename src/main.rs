@@ -2,16 +2,16 @@ use clap::Parser;
 use color::{Deg, ToRgb};
 use colorgrad::Gradient;
 use image::{Rgb, RgbImage};
+use klask::Settings;
 use rayon::prelude::*;
-use std::path::PathBuf;
+use std::{borrow::Cow, path::PathBuf};
 
 const CX: f32 = -0.7;
 const CY: f32 = 0.27015;
 
 const MAX_ITER: i32 = 256;
-const ZOOM: f32 = 4.0;
 
-#[derive(Debug, Parser, Clone, Default, PartialEq, Eq)]
+#[derive(Debug, Parser, Clone, Default, PartialEq)]
 #[clap(author, version, about, long_about = None)]
 pub struct Args {
     #[clap(short, long, default_value = "800")]
@@ -20,26 +20,59 @@ pub struct Args {
     #[clap(short, long, default_value = "600")]
     height: u32,
 
-    #[clap(short, long, required = true, parse(from_os_str))]
+    #[clap(short, long, parse(from_os_str), default_value = "out.png")]
     output: PathBuf,
+
+    #[clap(short, long, default_value = "1.0")]
+    zoom: f32,
+
+    #[clap(short, long, allow_hyphen_values = true, default_value = "0.0")]
+    x_offset: f32,
+
+    #[clap(short, long, allow_hyphen_values = true, default_value = "0.0")]
+    y_offset: f32,
+
+    #[clap(short, long, takes_value = false)]
+    gui: bool,
 }
 
 fn main() {
-    let opt = Args::parse();
+    let mut settings = Settings::default();
+    settings.custom_font = Some(Cow::Borrowed(include_bytes!(r"../Lato-Bold.ttf")));
 
-    let (move_x, move_y) = (0.95, -0.15);
+    let args = Args::parse();
+    if args.gui {
+        klask::run_derived::<Args, _>(settings, |o| process(o));
+    } else {
+        process(args);
+    }
+}
 
-    let w = opt.width as f32;
-    let h = opt.height as f32;
+fn process(args: Args) {
+    /*
+        if !opt.output.to_str().unwrap().trim().ends_with(".png") {
+            eprintln!(
+                "Only PNG supported, try --output {}.png",
+                opt.output.display()
+            );
+            return;
+        }
+    */
 
-    let mut img = RgbImage::new(opt.width, opt.height);
+    let (x_offset, y_offset) = (args.x_offset, args.y_offset);
+
+    let w = args.width as f32;
+    let h = args.height as f32;
+
+    let mut img = RgbImage::new(args.width, args.height);
+
     img.enumerate_pixels_mut()
         .collect::<Vec<(u32, u32, &mut Rgb<u8>)>>()
         .par_iter_mut()
         .for_each(|(x, y, pixel)| {
             let steps = convergence_steps(
-                1.5 * (*x as f32 - w / 2.0) / (0.5 * ZOOM * w) + move_x,
-                1.0 * (*y as f32 - h / 2.0) / (0.5 * ZOOM * h) + move_y,
+                1.5 * (*x as f32 - w / 2.0) / (0.5 * args.zoom * w) + x_offset,
+                1.0 * (*y as f32 - h / 2.0) / (0.5 * args.zoom * h) + y_offset,
             );
 
             //**pixel = colorgrade_1(steps);
@@ -47,7 +80,7 @@ fn main() {
             //dbg!(pixel);
         });
 
-    img.save(opt.output).unwrap();
+    img.save(args.output).unwrap();
 }
 
 fn convergence_steps(mut zx: f32, mut zy: f32) -> i32 {

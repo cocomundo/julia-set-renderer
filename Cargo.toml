@@ -4,8 +4,9 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-clap = { version = "3.0.14", features = ["derive"] }
+clap = { version = "3.0.0", features = ["derive"] }
 color-rs = { git = "https://github.com/arturoc/color-rs.git" }
 colorgrad = "0.5.0"
 image = "0.24.0"
 rayon = "1.5.1"
+klask = { git = "https://github.com/MichalGniadek/klask" }
