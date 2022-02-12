@@ -1,9 +1,9 @@
+use clap::Parser;
 use color::{Deg, ToRgb};
 use colorgrad::Gradient;
 use image::{Rgb, RgbImage};
 use rayon::prelude::*;
 use std::path::PathBuf;
-use structopt::StructOpt;
 
 const CX: f32 = -0.7;
 const CY: f32 = 0.27015;
@@ -11,20 +11,21 @@ const CY: f32 = 0.27015;
 const MAX_ITER: i32 = 256;
 const ZOOM: f32 = 4.0;
 
-#[derive(Debug, StructOpt, Clone, Default, PartialEq, Eq)]
-pub struct Opt {
-    #[structopt(short, long, default_value = "800")]
+#[derive(Debug, Parser, Clone, Default, PartialEq, Eq)]
+#[clap(author, version, about, long_about = None)]
+pub struct Args {
+    #[clap(short, long, default_value = "800")]
     width: u32,
 
-    #[structopt(short, long, default_value = "600")]
+    #[clap(short, long, default_value = "600")]
     height: u32,
 
-    #[structopt(short, long, required = true, parse(from_os_str))]
+    #[clap(short, long, required = true, parse(from_os_str))]
     output: PathBuf,
 }
 
 fn main() {
-    let opt = Opt::from_args();
+    let opt = Args::parse();
 
     let (move_x, move_y) = (0.95, -0.15);
 
