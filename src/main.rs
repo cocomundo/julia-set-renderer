@@ -1,4 +1,6 @@
-use image::{Pixel, Rgb, RgbImage};
+use color::{Deg, ToRgb};
+use colorgrad::Gradient;
+use image::{Rgb, RgbImage};
 use rayon::prelude::*;
 use std::path::PathBuf;
 use structopt::StructOpt;
@@ -6,8 +8,8 @@ use structopt::StructOpt;
 const CX: f32 = -0.7;
 const CY: f32 = 0.27015;
 
-const MAX_ITER: i32 = 255;
-const ZOOM: f32 = 3.0;
+const MAX_ITER: i32 = 256;
+const ZOOM: f32 = 4.0;
 
 #[derive(Debug, StructOpt, Clone, Default, PartialEq, Eq)]
 pub struct Opt {
@@ -24,7 +26,7 @@ pub struct Opt {
 fn main() {
     let opt = Opt::from_args();
 
-    let (move_x, move_y) = (0.0, 0.0);
+    let (move_x, move_y) = (0.95, -0.15);
 
     let w = opt.width as f32;
     let h = opt.height as f32;
@@ -38,7 +40,10 @@ fn main() {
                 1.5 * (*x as f32 - w / 2.0) / (0.5 * ZOOM * w) + move_x,
                 1.0 * (*y as f32 - h / 2.0) / (0.5 * ZOOM * h) + move_y,
             );
-            **pixel = delphi_gradient(steps);
+
+            //**pixel = colorgrade_1(steps);
+            **pixel = colorgrad(steps, colorgrad::turbo());
+            //dbg!(pixel);
         });
 
     img.save(opt.output).unwrap();
@@ -66,4 +71,21 @@ fn smooth_gradient(i: i32) -> Rgb<u8> {
     let g = (i + 30) * 10;
     let b = i * 3;
     Rgb([r as u8, g as u8, b as u8])
+}
+
+fn sidef_gradient(i: i32) -> Rgb<u8> {
+    let hsv = color::Hsv::<f32>::new(Deg(i as f32 / MAX_ITER as f32 * 360.0), 1.0, i as f32);
+    let rgb = hsv.to_rgb::<u8>();
+    Rgb([rgb.r, rgb.g, rgb.b])
+}
+
+fn colorgrad(i: i32, gradient: Gradient) -> Rgb<u8> {
+    let scaled = 1.0f64 / MAX_ITER as f64 * i as f64;
+
+    let val = gradient.at(scaled);
+    Rgb([
+        (val.r * 255.0) as u8,
+        (val.g * 255.0) as u8,
+        (val.b * 255.0) as u8,
+    ])
 }
