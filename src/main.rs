@@ -33,6 +33,9 @@ pub struct Args {
     y_offset: f64,
 
     #[clap(short, long, takes_value = false)]
+    open_after: bool,
+
+    #[clap(short, long, takes_value = false)]
     gui: bool,
 }
 
@@ -59,6 +62,14 @@ fn process(args: Args) {
         }
     */
 
+    let test_img = RgbImage::new(1, 1);
+
+    // Try if saving the image works. Avoid failing to save image after minutes of calculation.
+    // Saving image may fail for example if the file extension is not supported by `image`.
+    test_img.save(&args.output).unwrap();
+
+    let mut img = RgbImage::new(args.width, args.height);
+
     println!("Starting");
     let start = Instant::now();
 
@@ -66,8 +77,6 @@ fn process(args: Args) {
 
     let w = args.width as f64;
     let h = args.height as f64;
-
-    let mut img = RgbImage::new(args.width, args.height);
 
     img.enumerate_pixels_mut()
         .collect::<Vec<(u32, u32, &mut Rgb<u8>)>>()
@@ -85,9 +94,14 @@ fn process(args: Args) {
     let start = Instant::now();
     println!("Saving to {}", args.output.display());
 
-    img.save(args.output).unwrap();
+    img.save(&args.output).unwrap();
 
     println!("Done, saving took {}s", start.elapsed().as_secs());
+
+    if args.open_after {
+        println!("Opening {}", args.output.display());
+        opener::open(args.output).unwrap();
+    }
 }
 
 fn convergence_steps(mut zx: f64, mut zy: f64) -> i32 {
