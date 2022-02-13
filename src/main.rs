@@ -32,7 +32,7 @@ pub struct Args {
     #[clap(short, long, allow_hyphen_values = true, default_value = "0.0")]
     y_offset: f64,
 
-    #[clap(short, long, takes_value = false)]
+    #[clap(long, takes_value = false)]
     open_after: bool,
 
     #[clap(short, long, takes_value = false)]
