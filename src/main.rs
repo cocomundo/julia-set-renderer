@@ -130,6 +130,7 @@ fn convergence_steps(mut zx: f64, mut zy: f64) -> i32 {
     i
 }
 
+#[allow(unused)]
 fn delphi_gradient(i: i32) -> Rgb<u8> {
     let r = (i >> 5) * 36;
     let g = ((i >> 3) & 7) * 36;
@@ -137,6 +138,7 @@ fn delphi_gradient(i: i32) -> Rgb<u8> {
     Rgb([r as u8, g as u8, b as u8])
 }
 
+#[allow(unused)]
 fn smooth_gradient(i: i32) -> Rgb<u8> {
     let r = i * 5;
     let g = (i + 30) * 10;
@@ -144,6 +146,7 @@ fn smooth_gradient(i: i32) -> Rgb<u8> {
     Rgb([r as u8, g as u8, b as u8])
 }
 
+#[allow(unused)]
 fn sidef_gradient(i: i32) -> Rgb<u8> {
     let hsv = color::Hsv::<f64>::new(Deg(i as f64 / MAX_ITER as f64 * 360.0), 1.0, i as f64);
     let rgb = hsv.to_rgb::<u8>();
