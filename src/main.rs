@@ -16,6 +16,16 @@ const CY: f64 = 0.27015;
 
 const MAX_ITER: i32 = 256;
 
+// TODO: Add argument `output` for output file.
+// * Check out all the places where right now we hard-code "out.png".
+// * Add a clap argument:
+//   - Short and long form
+//   - Parse with `from_os_str`
+//   - Default value: "out.png"
+//   - Type: PathBuf
+// * Replace all hardcoded places with `args.output`
+//   - You may have to borrow that string using `&`
+//   - You can use `args.output.display()` to get a `String` from a `PathBuf`
 #[derive(Debug, Parser, Clone, Default, PartialEq)]
 #[clap(author, version, about, long_about = None)]
 pub struct Args {
@@ -24,9 +34,6 @@ pub struct Args {
 
     #[clap(short, long, default_value = "600")]
     height: u32,
-
-    #[clap(short, long, parse(from_os_str), default_value = "out.png")]
-    output: PathBuf,
 
     #[clap(short, long, default_value = "1.0")]
     zoom: f64,
@@ -60,7 +67,7 @@ fn process(args: Args) {
     // Try if saving the image works. Avoids failing to save image after minutes of calculation.
     // Saving image may fail for example if the file extension is not supported by crate `image`.
     let test_img = RgbImage::new(1, 1);
-    test_img.save(&args.output).unwrap();
+    test_img.save("out.png").unwrap();
 
     let mut img = RgbImage::new(args.width, args.height);
 
@@ -95,15 +102,15 @@ fn process(args: Args) {
 
     println!("Finished processing, took {}s", start.elapsed().as_secs());
     let start = Instant::now();
-    println!("Saving to {}", args.output.display());
+    println!("Saving to out.png");
 
-    img.save(&args.output).unwrap();
+    img.save("out.png").unwrap();
 
     println!("Done, saving took {}s", start.elapsed().as_secs());
 
     if args.open_after {
-        println!("Opening {}", args.output.display());
-        opener::open(args.output).unwrap();
+        println!("Opening out.png");
+        opener::open("out.png").unwrap();
     }
 }
 
