@@ -80,7 +80,14 @@ fn process(args: Args) {
 
     let mut pixels = img.enumerate_pixels_mut().collect::<Vec<_>>();
 
-    pixels.par_iter_mut().for_each(|(x, y, pixel)| {
+    // TODO: Convert this for loop to use iterator adapters instead.
+    // * Note the for loop iterates mutably over the pixels (use `iter_mut` on the vector).
+    // * Use the editors code completion to find a suitable iterator adapter.
+    // * The body of the for loop does not need to be changed!
+    // * Check that the performance is roughly equal.
+    // TODO: Use crate `rayon` to make the iterator adapter version to a parallelized iterator.
+    // * Check the `rayon` docs (on docs.rs) to find out what you need to change here.
+    for (x, y, pixel) in &mut pixels {
         update_progressbar(&count, start, &seconds, num_pixels);
 
         let steps = convergence_steps(
@@ -89,7 +96,7 @@ fn process(args: Args) {
         );
 
         **pixel = colorgrad(steps, colorgrad::turbo());
-    });
+    }
 
     klask::output::progress_bar("Progress", 1.0);
 
