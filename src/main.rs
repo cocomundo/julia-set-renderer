@@ -4,7 +4,12 @@ use colorgrad::Gradient;
 use image::{Rgb, RgbImage};
 use klask::Settings;
 use rayon::prelude::*;
-use std::{borrow::Cow, path::PathBuf, time::Instant};
+use std::{
+    borrow::Cow,
+    path::PathBuf,
+    sync::atomic::{AtomicU64, AtomicUsize, Ordering},
+    time::Instant,
+};
 
 const CX: f64 = -0.7;
 const CY: f64 = 0.27015;
@@ -52,20 +57,9 @@ fn main() {
 }
 
 fn process(args: Args) {
-    /*
-        if !opt.output.to_str().unwrap().trim().ends_with(".png") {
-            eprintln!(
-                "Only PNG supported, try --output {}.png",
-                opt.output.display()
-            );
-            return;
-        }
-    */
-
+    // Try if saving the image works. Avoids failing to save image after minutes of calculation.
+    // Saving image may fail for example if the file extension is not supported by crate `image`.
     let test_img = RgbImage::new(1, 1);
-
-    // Try if saving the image works. Avoid failing to save image after minutes of calculation.
-    // Saving image may fail for example if the file extension is not supported by `image`.
     test_img.save(&args.output).unwrap();
 
     let mut img = RgbImage::new(args.width, args.height);
@@ -77,18 +71,27 @@ fn process(args: Args) {
 
     let w = args.width as f64;
     let h = args.height as f64;
+    let num_pixels = w * h;
 
-    img.enumerate_pixels_mut()
-        .collect::<Vec<(u32, u32, &mut Rgb<u8>)>>()
-        .par_iter_mut()
-        .for_each(|(x, y, pixel)| {
-            let steps = convergence_steps(
-                1.5 * (*x as f64 - w / 2.0) / (0.5 * args.zoom * w) + x_offset,
-                1.0 * (*y as f64 - h / 2.0) / (0.5 * args.zoom * h) + y_offset,
-            );
+    // number of processed pixels.
+    let count = AtomicUsize::new(0);
+    // seconds elapsed after start (used for updating the progress bar only once a second).
+    let seconds = AtomicU64::new(0);
 
-            **pixel = colorgrad(steps, colorgrad::turbo());
-        });
+    let mut pixels = img.enumerate_pixels_mut().collect::<Vec<_>>();
+
+    pixels.par_iter_mut().for_each(|(x, y, pixel)| {
+        update_progressbar(&count, start, &seconds, num_pixels);
+
+        let steps = convergence_steps(
+            1.5 * (*x as f64 - w / 2.0) / (0.5 * args.zoom * w) + x_offset,
+            1.0 * (*y as f64 - h / 2.0) / (0.5 * args.zoom * h) + y_offset,
+        );
+
+        **pixel = colorgrad(steps, colorgrad::turbo());
+    });
+
+    klask::output::progress_bar("Progress", 1.0);
 
     println!("Finished processing, took {}s", start.elapsed().as_secs());
     let start = Instant::now();
@@ -101,6 +104,19 @@ fn process(args: Args) {
     if args.open_after {
         println!("Opening {}", args.output.display());
         opener::open(args.output).unwrap();
+    }
+}
+
+fn update_progressbar(count: &AtomicUsize, start: Instant, seconds: &AtomicU64, num_pixels: f64) {
+    count.fetch_add(1, Ordering::SeqCst);
+
+    let elapsed = start.elapsed().as_secs();
+    if elapsed != (*seconds).load(Ordering::SeqCst) {
+        seconds.store(elapsed, Ordering::SeqCst);
+        klask::output::progress_bar(
+            "Progress",
+            count.load(Ordering::Relaxed) as f32 / num_pixels as f32,
+        );
     }
 }
 
