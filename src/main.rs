@@ -81,7 +81,9 @@ fn process(args: Args) {
     let mut pixels = img.enumerate_pixels_mut().collect::<Vec<_>>();
 
     pixels.par_iter_mut().for_each(|(x, y, pixel)| {
-        update_progressbar(&count, start, &seconds, num_pixels);
+        if args.gui {
+            update_progressbar(&count, start, &seconds, num_pixels);
+        }
 
         let steps = convergence_steps(
             1.5 * (*x as f64 - w / 2.0) / (0.5 * args.zoom * w) + x_offset,
@@ -91,7 +93,9 @@ fn process(args: Args) {
         **pixel = colorgrad(steps, colorgrad::turbo());
     });
 
-    klask::output::progress_bar("Progress", 1.0);
+    if args.gui {
+        klask::output::progress_bar("Progress", 1.0);
+    }
 
     println!("Finished processing, took {}s", start.elapsed().as_secs());
     let start = Instant::now();
