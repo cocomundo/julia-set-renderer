@@ -2,6 +2,15 @@
 name = "julia-set-renderer"
 version = "0.1.0"
 edition = "2021"
+default-run = "julia-set-renderer-gui"
+
+[[bin]]
+name = "julia-set-renderer-gui"
+path = "bin/gui.rs"
+
+[[bin]]
+name = "julia-set-renderer-cli"
+path = "bin/cli.rs"
 
 [dependencies]
 clap = { version = "3.0.0", features = ["derive"] }
