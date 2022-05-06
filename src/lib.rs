@@ -73,7 +73,7 @@ pub fn process<const SHOW_PROGESS_BAR: bool>(args: Args) {
             1.0 * (*y as f64 - h / 2.0) / (0.5 * args.zoom * h) + y_offset,
         );
 
-        **pixel = colorgrad(steps, colorgrad::turbo());
+        **pixel = colorgrad(steps, &colorgrad::turbo());
     });
 
     if SHOW_PROGESS_BAR {
@@ -118,7 +118,7 @@ fn convergence_steps(mut zx: f64, mut zy: f64) -> i32 {
 }
 
 #[allow(unused)]
-fn delphi_gradient(i: i32) -> Rgb<u8> {
+const fn delphi_gradient(i: i32) -> Rgb<u8> {
     let r = (i >> 5) * 36;
     let g = ((i >> 3) & 7) * 36;
     let b = (i & 3) * 85;
@@ -126,7 +126,7 @@ fn delphi_gradient(i: i32) -> Rgb<u8> {
 }
 
 #[allow(unused)]
-fn smooth_gradient(i: i32) -> Rgb<u8> {
+const fn smooth_gradient(i: i32) -> Rgb<u8> {
     let r = i * 5;
     let g = (i + 30) * 10;
     let b = i * 3;
@@ -140,7 +140,7 @@ fn sidef_gradient(i: i32) -> Rgb<u8> {
     Rgb([rgb.r, rgb.g, rgb.b])
 }
 
-fn colorgrad(i: i32, gradient: Gradient) -> Rgb<u8> {
+fn colorgrad(i: i32, gradient: &Gradient) -> Rgb<u8> {
     let scaled = 1.0f64 / MAX_ITER as f64 * i as f64;
 
     let val = gradient.at(scaled);
