@@ -1,5 +1,4 @@
-use julia_set_renderer::process;
-use julia_set_renderer::Args;
+use julia_set_renderer::{cli::Args, process};
 use klask::Settings;
 use std::borrow::Cow;
 

@@ -1,10 +1,9 @@
-use clap::Parser;
+use cli::Args;
 use color::{Deg, ToRgb};
 use colorgrad::Gradient;
 use image::{Rgb, RgbImage};
 use rayon::prelude::*;
 use std::{
-    path::PathBuf,
     sync::atomic::{AtomicU64, AtomicUsize, Ordering},
     time::Instant,
 };
@@ -14,30 +13,7 @@ const CY: f64 = 0.27015;
 
 const MAX_ITER: i32 = 256;
 
-#[derive(Debug, Parser, Clone, Default, PartialEq)]
-#[clap(author, version, about, long_about = None)]
-pub struct Args {
-    #[clap(short, long, default_value_t = 800)]
-    width: u32,
-
-    #[clap(short, long, default_value_t = 600)]
-    height: u32,
-
-    #[clap(short, long, parse(from_os_str), default_value = "out.png")]
-    output: PathBuf,
-
-    #[clap(short, long, default_value_t = 1.0)]
-    zoom: f64,
-
-    #[clap(short, long, allow_hyphen_values = true, default_value_t = 0.0)]
-    x_offset: f64,
-
-    #[clap(short, long, allow_hyphen_values = true, default_value_t = 0.0)]
-    y_offset: f64,
-
-    #[clap(long, takes_value = false)]
-    open_after: bool,
-}
+pub mod cli;
 
 pub fn process<const SHOW_PROGESS_BAR: bool>(args: Args) {
     // Try if saving the image works. Avoids failing to save image after minutes of calculation.
