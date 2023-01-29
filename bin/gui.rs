@@ -1,11 +1,10 @@
 use julia_set_renderer::{cli::Args, process};
 use klask::Settings;
+use std::borrow::Cow;
 
 fn main() {
-    let settings = Settings {
-        custom_font: Some(include_bytes!(r"../Lato-Bold.ttf")),
-        ..Default::default()
-    };
+    let mut settings = Settings::default();
+    settings.custom_font = Some(Cow::Borrowed(include_bytes!(r"../Lato-Bold.ttf")));
 
     klask::run_derived::<Args, _>(settings, process::<true>);
 }
