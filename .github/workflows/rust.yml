@@ -1,24 +1,38 @@
-on: [push]
+name: CI
 
-name: build
+on:
+  push:
+    branches:
+      - main
 
 jobs:
-  check:
-    name: Rust project
+  fmt-tests-clippy:
+    name: Run tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - name: Install latest nightly
+      - name: Install for egui
+        run: sudo apt-get update && sudo apt-get install libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev libspeechd-dev libxkbcommon-dev libssl-dev libgtk-3-dev
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Install toolchain
         uses: actions-rs/toolchain@v1
         with:
-            toolchain: nightly
-            override: true
-            components: rustfmt, clippy
-
-      # `cargo check` command here will use installed `nightly`
-      # as it is set as an "override" for current directory
-
-      - name: Run cargo check
+          profile: minimal
+          toolchain: stable
+          components: clippy
+      - name: Set up cargo cache
+        uses: Swatinem/rust-cache@v2
+      - name: Rustfmt
+        uses: actions-rs/cargo@v1
+        with:
+          command: fmt
+          args: --all -- --check
+      - name: Check default features
         uses: actions-rs/cargo@v1
         with:
           command: check
+      - name: Test
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: --all-features
